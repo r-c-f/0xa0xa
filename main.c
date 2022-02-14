@@ -355,8 +355,8 @@ bool grid_add_valid(int dst[GRID_SIZE][GRID_SIZE], int src[GRID_SIZE][GRID_SIZE]
 void draw_piece(WINDOW *w, struct piece *p)
 {
 	int x, y, i;
-	for (x = 0; x < 6; ++x) {
-		for (y = 0; y < 6; ++y) {
+	for (x = 0; x < 5; ++x) {
+		for (y = 0; y < 5; ++y) {
 			for (i = 1; i < 3; ++i) {
 				mvwaddch(w, y + 1, (2 * x) + i, ACS_BLOCK | COLOR_PAIR(p->grid[x][y]));
 			}
@@ -523,7 +523,7 @@ int main(int argc, char **argv)
 	WINDOW *win_grid = newwin((2 * GRID_SIZE) + 2, (3 * GRID_SIZE) + 2, 1,1);
 
 	for (i = 0; i < BANK_COUNT; ++i) {
-		win_piece[i] = newwin(8, (GRID_SIZE * 2) + 2, 1 + (9 * i), 4 + (3 * GRID_SIZE));
+		win_piece[i] = newwin(7, (GRID_SIZE * 2) + 2, 1 + (7 * i), 4 + (3 * GRID_SIZE));
 	}
 
 	start_color();
