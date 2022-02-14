@@ -340,7 +340,6 @@ void draw_grid(WINDOW *w, int grid[GRID_SIZE][GRID_SIZE])
 bool grid_add_valid(int dst[GRID_SIZE][GRID_SIZE], int src[GRID_SIZE][GRID_SIZE])
 {
 	int x, y;
-	int attr[GRID_SIZE][GRID_SIZE] = {0};
 
 	for (x = 0; x < GRID_SIZE; ++x) {
 		for (y = 0; y < GRID_SIZE; ++y) {
