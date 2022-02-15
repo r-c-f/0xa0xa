@@ -585,6 +585,8 @@ int main(int argc, char **argv)
 	for (i = 1; i < PIECE_BASE_LEN; ++i) {
 		fill_grid_blanks(piece_base[i].grid);
 	}
+	print_msg("Arrows/hjkl/wasd: Move, Tab: Select, Enter/Space: Place, ^C: Quit, ^D: New");
+	refresh();
 	while (1) {
 		piece_bank_fill();
 		piece_bank_pos = 0;
