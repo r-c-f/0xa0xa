@@ -497,6 +497,25 @@ void print_msg(char *fmt,...)
 	refresh();
 }
 
+enum fkey {
+        FKEY_HELP = 1,
+        FKEY_NEW,
+        FKEY_QUIT,
+};
+char *fkey_lab[9] = {
+        NULL,
+        "F1  Help",
+        "F2   New",
+        "F3  Quit",
+};
+
+void draw_slk(void)
+{
+        int i;
+        for (i = 1; i < (sizeof(fkey_lab)/sizeof(*fkey_lab)); ++i) {
+                slk_set(i, fkey_lab[i] ? fkey_lab[i] : "", 0);
+        }
+}
 
 struct sopt optspec[] = {
 	SOPT_INITL('h', "help", "Help message"),
@@ -526,9 +545,15 @@ int main(int argc, char **argv)
 
 	rnd_pcg_seed(&pcg, time(NULL) + getpid());
 
+	slk_init(1);
+
 	initscr();
 	cbreak();
 	noecho();
+	keypad(stdscr, true);
+
+	draw_slk();
+	slk_refresh();
 
 	WINDOW *win_grid = newwin((2 * GRID_SIZE) + 2, (3 * GRID_SIZE) + 2, 1,1);
 
@@ -571,15 +596,19 @@ int main(int argc, char **argv)
 			while (1) {
 				c = getch();
 				switch (c) {
+					case KEY_LEFT:
 					case 'h':
 						piece_move(&piece_sel, -1, 0);
 						break;
+					case KEY_RIGHT:
 					case 'l':
 						piece_move(&piece_sel, 1, 0);
 						break;
+					case KEY_UP:
 					case 'k':
 						piece_move(&piece_sel, 0, -1);
 						break;
+					case KEY_DOWN:
 					case 'j':
 						piece_move(&piece_sel, 0, 1);
 						break;
@@ -597,9 +626,16 @@ int main(int argc, char **argv)
 						} while (!piece_bank_stat[piece_bank_pos]);
 						memmove(&piece_sel, piece_bank + piece_bank_pos, sizeof(piece_sel));
 						break;
+					case KEY_F0 + FKEY_HELP:
+						print_msg("Arrow Keys/hjkl: Move, Tab: Select piece, Enter/Space: Place piece");
+						break;
+					case KEY_F0 + FKEY_NEW:
 					case 4: // Ctrl+D
 						endwin();
 						execvp(argv[0], argv);
+					case KEY_F0 + FKEY_QUIT:
+						endwin();
+						exit(0);
 					default:
 						print_msg("%d: invalid key", score);
 				}
