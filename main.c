@@ -299,7 +299,15 @@ void draw_attr_grid(WINDOW *w, int grid[GRID_SIZE][GRID_SIZE])
 	int ch;
 	for (x = 0; x < GRID_SIZE; ++x) {
 		for (y = 0; y < GRID_SIZE; ++y) {
-			ch = (grid[x][y] & A_BLINK) ? 'X' : ACS_BLOCK;
+			if (grid[x][y] & A_INVIS) {
+				ch = ' ';
+			}else {
+				if (grid[x][y] & A_BLINK) {
+					ch = 'X';
+				} else {
+					ch = ACS_BLOCK;
+				}
+			}
 			for (i = 1; i < 4; ++i) {
 				for (j = 1; j < 3; ++j) {
 					mvwaddch(w, (y * 2) + j, (x * 3) + i, ch | grid[x][y]);
@@ -316,10 +324,12 @@ void draw_grid_overlay(WINDOW *w, int a[GRID_SIZE][GRID_SIZE], int b[GRID_SIZE][
 
 	for (x = 0; x < GRID_SIZE; ++x) {
 		for (y = 0; y < GRID_SIZE; ++y) {
-			if ((a[x][y] == PIECE_BLANK) || (b[x][y] == PIECE_BLANK)) {
-				attr[x][y] = COLOR_PAIR(a[x][y] + b[x][y] - 1);
+			if ((a[x][y] == PIECE_BLANK) && (b[x][y] == PIECE_BLANK)) {
+				attr[x][y] = A_INVIS;
+			} else if ((a[x][y] == PIECE_BLANK) || (b[x][y] == PIECE_BLANK)) {
+				attr[x][y] = (has_colors() ? COLOR_PAIR(a[x][y] + b[x][y] - 1) : 0 );
 			} else {
-				attr[x][y] = COLOR_PAIR(PIECE_BLANK) | A_REVERSE | A_BLINK | A_BOLD;
+				attr[x][y] = (has_colors() ? COLOR_PAIR(PIECE_BLANK): 0) | A_REVERSE | A_BLINK | A_BOLD;
 			}
 		}
 	}
@@ -331,7 +341,7 @@ void draw_grid(WINDOW *w, int grid[GRID_SIZE][GRID_SIZE])
 	int attr[GRID_SIZE][GRID_SIZE] = {0};
 	for (x = 0; x < GRID_SIZE; ++x) {
 		for (y = 0; y < GRID_SIZE; ++y) {
-			attr[x][y] = COLOR_PAIR(grid[x][y]);
+			attr[x][y] = (has_colors() ? COLOR_PAIR(grid[x][y]) : 0);
 		}
 	}
 	draw_attr_grid(w, attr);
@@ -353,11 +363,12 @@ bool grid_add_valid(int dst[GRID_SIZE][GRID_SIZE], int src[GRID_SIZE][GRID_SIZE]
 
 void draw_piece(WINDOW *w, struct piece *p)
 {
-	int x, y, i;
+	int x, y, i, ch;
 	for (x = 0; x < 5; ++x) {
 		for (y = 0; y < 5; ++y) {
 			for (i = 1; i < 3; ++i) {
-				mvwaddch(w, y + 1, (2 * x) + i, ACS_BLOCK | COLOR_PAIR(p->grid[x][y]));
+				ch = (p->grid[x][y] == PIECE_BLANK) ? ' ' : ACS_BLOCK;
+				mvwaddch(w, y + 1, (2 * x) + i, ch | (has_colors() ? COLOR_PAIR(p->grid[x][y]) : 0));
 			}
 		}
 	}
@@ -525,7 +536,6 @@ int main(int argc, char **argv)
 		win_piece[i] = newwin(7, (GRID_SIZE * 2) + 2, 1 + (7 * i), 4 + (3 * GRID_SIZE));
 	}
 
-	start_color();
 
 	score = 0;
 	memset(base_grid, 0, sizeof(base_grid));
@@ -534,11 +544,14 @@ int main(int argc, char **argv)
 	box(win_grid, 0, 0);
 	refresh();
 
-	for (i = 1; i < PIECE_TYPE_COUNT; ++i) {
-		if (i <= COLORS) {
-			init_pair(i, i - 1, COLOR_BLACK);
-		} else {
-			init_pair(i, (i % COLORS) + 1, COLOR_BLACK);
+	if (has_colors()) {
+		start_color();
+		for (i = 1; i < PIECE_TYPE_COUNT; ++i) {
+			if (i <= COLORS) {
+				init_pair(i, i - 1, COLOR_BLACK);
+			} else {
+				init_pair(i, (i % COLORS) + 1, COLOR_BLACK);
+			}
 		}
 	}
 	for (i = 1; i < PIECE_BASE_LEN; ++i) {
