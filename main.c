@@ -498,6 +498,34 @@ void print_msg(char *fmt,...)
 	refresh();
 }
 
+#define PRINT_HELP_BOLD_DESC(bold, desc) do { \
+	attron(A_BOLD); \
+	addstr(bold); \
+	attroff(A_BOLD); \
+	addstr(": "); \
+	addstr(desc); \
+	addstr("; "); \
+} while (0)
+
+void print_help(void)
+{
+	attr_t oldattr;
+	short oldpair;
+	attr_get(&oldattr, &oldpair, NULL);
+	print_msg("");
+	move(getmaxy(stdscr) - 1, 0);
+	
+	PRINT_HELP_BOLD_DESC("Arrows/hjkl/wasd", "Move");
+	PRINT_HELP_BOLD_DESC("Tab", "Select");
+	PRINT_HELP_BOLD_DESC("Enter/Space", "Place");
+	PRINT_HELP_BOLD_DESC("^C", "Quit");
+	PRINT_HELP_BOLD_DESC("^D", "New");
+
+	attr_set(oldattr, oldpair, NULL);
+	refresh();
+}
+	
+
 enum fkey {
         FKEY_HELP = 1,
         FKEY_NEW,
@@ -585,7 +613,7 @@ int main(int argc, char **argv)
 	for (i = 1; i < PIECE_BASE_LEN; ++i) {
 		fill_grid_blanks(piece_base[i].grid);
 	}
-	print_msg("Arrows/hjkl/wasd: Move, Tab: Select, Enter/Space: Place, ^C: Quit, ^D: New");
+	print_help();
 	refresh();
 	while (1) {
 		piece_bank_fill();
@@ -636,10 +664,10 @@ int main(int argc, char **argv)
 						memmove(&piece_sel, piece_bank + piece_bank_pos, sizeof(piece_sel));
 						break;
 					case KEY_F0 + FKEY_HELP:
-						print_msg("Arrows/hjkl/wasd: Move, Tab: Select, Enter/Space: Place, ^C: Quit, ^D: New");
+						print_help();
 						break;
 					case KEY_F0 + FKEY_NEW:
-					case 4: // Ctrl+D
+					case 4: /* Ctrl+D */
 						endwin();
 						execvp(argv[0], argv);
 					case KEY_F0 + FKEY_QUIT:
