@@ -502,9 +502,7 @@ void print_msg(char *fmt,...)
 	attron(A_BOLD); \
 	addstr(bold); \
 	attroff(A_BOLD); \
-	addstr(": "); \
-	addstr(desc); \
-	addstr("; "); \
+	printw(": %s; ", desc); \
 } while (0)
 
 void print_help(void)
@@ -514,7 +512,7 @@ void print_help(void)
 	attr_get(&oldattr, &oldpair, NULL);
 	print_msg("");
 	move(getmaxy(stdscr) - 1, 0);
-	
+
 	PRINT_HELP_BOLD_DESC("Arrows/hjkl/wasd", "Move");
 	PRINT_HELP_BOLD_DESC("Tab", "Select");
 	PRINT_HELP_BOLD_DESC("Enter/Space", "Place");
@@ -523,27 +521,6 @@ void print_help(void)
 
 	attr_set(oldattr, oldpair, NULL);
 	refresh();
-}
-	
-
-enum fkey {
-        FKEY_HELP = 1,
-        FKEY_NEW,
-        FKEY_QUIT,
-};
-char *fkey_lab[9] = {
-        NULL,
-        "F1:Help",
-        "F2:New",
-        "F3:Quit",
-};
-
-void draw_slk(void)
-{
-        int i;
-        for (i = 1; i < (sizeof(fkey_lab)/sizeof(*fkey_lab)); ++i) {
-                slk_set(i, fkey_lab[i] ? fkey_lab[i] : "", 0);
-        }
 }
 
 struct sopt optspec[] = {
@@ -576,15 +553,10 @@ int main(int argc, char **argv)
 
 	setlocale(LC_ALL, "");
 
-	slk_init(1);
-
 	initscr();
 	cbreak();
 	noecho();
 	keypad(stdscr, true);
-
-	draw_slk();
-	slk_refresh();
 
 	WINDOW *win_grid = newwin((2 * GRID_SIZE) + 2, (3 * GRID_SIZE) + 2, 1,1);
 
@@ -613,7 +585,7 @@ int main(int argc, char **argv)
 	for (i = 1; i < PIECE_BASE_LEN; ++i) {
 		fill_grid_blanks(piece_base[i].grid);
 	}
-	print_help();
+	print_msg("F1 for help");
 	refresh();
 	while (1) {
 		piece_bank_fill();
@@ -663,18 +635,14 @@ int main(int argc, char **argv)
 						} while (!piece_bank_stat[piece_bank_pos]);
 						memmove(&piece_sel, piece_bank + piece_bank_pos, sizeof(piece_sel));
 						break;
-					case KEY_F0 + FKEY_HELP:
+					case KEY_F0 + 1:
 						print_help();
 						break;
-					case KEY_F0 + FKEY_NEW:
 					case 4: /* Ctrl+D */
 						endwin();
 						execvp(argv[0], argv);
-					case KEY_F0 + FKEY_QUIT:
-						endwin();
-						exit(0);
 					default:
-						print_msg("%d: invalid key", score);
+						print_msg("%d: invalid key (F1 for help)", score);
 				}
 				draw_piece_bank();
 				draw_grid_overlay(win_grid, base_grid, piece_sel.grid);
