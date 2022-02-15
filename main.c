@@ -489,9 +489,9 @@ bool piece_move(struct piece *piece, int dx, int dy)
 void print_msg(char *fmt,...)
 {
 	va_list ap;
-	move(LINES - 1, 0);
+	move(getmaxy(stdscr) - 1, 0);
 	clrtoeol();
-	move(LINES - 1, 0);
+	move(getmaxy(stdscr) - 1, 0);
 	va_start(ap, fmt);
 	vw_printw(stdscr, fmt, ap);
 	va_end(ap);
@@ -505,9 +505,9 @@ enum fkey {
 };
 char *fkey_lab[9] = {
         NULL,
-        "F1  Help",
-        "F2   New",
-        "F3  Quit",
+        "F1:Help",
+        "F2:New",
+        "F3:Quit",
 };
 
 void draw_slk(void)
