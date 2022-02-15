@@ -400,21 +400,22 @@ void draw_piece_bank(void)
 	}
 }
 
-bool grid_add(int dst[GRID_SIZE][GRID_SIZE], int src[GRID_SIZE][GRID_SIZE])
+int grid_add(int dst[GRID_SIZE][GRID_SIZE], int src[GRID_SIZE][GRID_SIZE])
 {
-	int x, y;
+	int x, y, points = 0;
 
 	if (!grid_add_valid(dst, src))
-		return false;
+		return 0;
 
 	for (x = 0; x < GRID_SIZE; ++x) {
 		for (y = 0; y < GRID_SIZE; ++y) {
 			if (src[x][y] != PIECE_BLANK) {
+				++points;
 				dst[x][y] = src[x][y];
 			}
 		}
 	}
-	return true;
+	return points;
 }
 
 int grid_clear_lines(int grid[GRID_SIZE][GRID_SIZE])
@@ -455,7 +456,7 @@ int grid_clear_lines(int grid[GRID_SIZE][GRID_SIZE])
 			}
 		}
 	}
-	return points;
+	return (5 * points) * ( points + 1);
 }
 
 
@@ -534,7 +535,7 @@ int main(int argc, char **argv)
 	int opt, cpos = 0, optind = 0;
 	char *optarg = NULL;
 
-	int i, j, c, score;
+	int i, j, c, score, add_points;
 
 	sopt_usage_set(optspec, argv[0], "1010!-like game for the terminal");
 
@@ -623,7 +624,7 @@ int main(int argc, char **argv)
 						break;
 					case '\n':
 					case ' ':
-						if (grid_add(base_grid, piece_sel.grid)) {
+						if ((add_points = grid_add(base_grid, piece_sel.grid))) {
 							goto added;
 						}else {
 							print_msg("%d: Cannot place", score);
@@ -649,7 +650,7 @@ int main(int argc, char **argv)
 				wrefresh(win_grid);
 			}
 added:
-			score += grid_clear_lines(base_grid);
+			score += grid_clear_lines(base_grid) + add_points;
 			draw_grid(win_grid, base_grid);
 			piece_bank_stat[piece_bank_pos] = false;
 			piece_bank_pos = -1;
