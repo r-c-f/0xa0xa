@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -544,6 +545,8 @@ int main(int argc, char **argv)
 	}
 
 	rnd_pcg_seed(&pcg, time(NULL) + getpid());
+
+	setlocale(LC_ALL, "");
 
 	slk_init(1);
 
