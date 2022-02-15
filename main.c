@@ -598,18 +598,22 @@ int main(int argc, char **argv)
 				switch (c) {
 					case KEY_LEFT:
 					case 'h':
+					case 'a':
 						piece_move(&piece_sel, -1, 0);
 						break;
 					case KEY_RIGHT:
 					case 'l':
+					case 'd':
 						piece_move(&piece_sel, 1, 0);
 						break;
 					case KEY_UP:
 					case 'k':
+					case 'w':
 						piece_move(&piece_sel, 0, -1);
 						break;
 					case KEY_DOWN:
 					case 'j':
+					case 's':
 						piece_move(&piece_sel, 0, 1);
 						break;
 					case '\n':
@@ -627,7 +631,7 @@ int main(int argc, char **argv)
 						memmove(&piece_sel, piece_bank + piece_bank_pos, sizeof(piece_sel));
 						break;
 					case KEY_F0 + FKEY_HELP:
-						print_msg("Arrow Keys/hjkl: Move, Tab: Select piece, Enter/Space: Place piece");
+						print_msg("Arrows/hjkl/wasd: Move, Tab: Select, Enter/Space: Place, ^C: Quit, ^D: New");
 						break;
 					case KEY_F0 + FKEY_NEW:
 					case 4: // Ctrl+D
