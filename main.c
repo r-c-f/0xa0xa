@@ -613,6 +613,18 @@ struct sopt optspec[] = {
 	SOPT_INIT_END
 };
 
+#define GAME_END(restart) do { \
+	print_msg("GAME OVER (press any key) -- %d pts %s", score, (score > high_score) ? " -- NEW HIGH SCORE" : ""); \
+	store_high_score(); \
+	getch(); \
+	sleep(1); \
+	endwin(); \
+	if (restart) \
+		execvp(argv[0], argv); \
+	exit(0); \
+} while (0)
+
+
 int main(int argc, char **argv)
 {
 	/* sopt things*/
@@ -735,14 +747,10 @@ int main(int argc, char **argv)
 					case KEY_F0 + 1:
 						print_help();
 						break;
-					case 4: /* Ctrl+D */
-						store_high_score();
-						endwin();
-						execvp(argv[0], argv);
 					case 3: /* Ctrl+C */
-						store_high_score();
-						endwin();
-						exit(0);
+						GAME_END(false);
+					case 4: /* Ctrl+D */
+						GAME_END(true);
 					default:
 						print_msg("Invalid key (F1 for help)");
 				}
@@ -758,12 +766,7 @@ added:
 			if (game_valid()) {
 				print_msg("SCORE: %d pts\t HIGH SCORE: %d", score, high_score);
 			} else {
-				print_msg("GAME OVER -- %d pts %s", score, (score > high_score) ? " -- NEW HIGH SCORE" : "");
-				store_high_score();
-				getch();
-				sleep(1);
-				endwin();
-				execvp(argv[0], argv);
+				GAME_END(true);
 			}
 		}
 	}
