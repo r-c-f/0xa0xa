@@ -518,7 +518,7 @@ void print_help(void)
 	PRINT_HELP_BOLD_DESC("Arrows/hjkl/wasd", "Move");
 	PRINT_HELP_BOLD_DESC("Tab", "Select");
 	PRINT_HELP_BOLD_DESC("Enter/Space", "Place");
-	PRINT_HELP_BOLD_DESC("Q", "Quit");
+	PRINT_HELP_BOLD_DESC("^C", "Quit");
 	PRINT_HELP_BOLD_DESC("^D", "New");
 
 	attr_set(oldattr, oldpair, NULL);
@@ -566,7 +566,7 @@ int main(int argc, char **argv)
 		setlocale(LC_ALL, "");
 
 	initscr();
-	cbreak();
+	raw();
 	noecho();
 	keypad(stdscr, true);
 
@@ -656,8 +656,7 @@ int main(int argc, char **argv)
 					case 4: /* Ctrl+D */
 						endwin();
 						execvp(argv[0], argv);
-					case 'Q':
-					case 'q':
+					case 3: /* Ctrl+C */
 						endwin();
 						exit(0);
 					default:
