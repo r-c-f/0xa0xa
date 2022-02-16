@@ -694,7 +694,7 @@ int main(int argc, char **argv)
 	for (i = 1; i < PIECE_BASE_LEN; ++i) {
 		fill_grid_blanks(piece_base[i].grid);
 	}
-	print_msg("F1 for help");
+	print_msg("^H for help");
 	refresh();
 	while (1) {
 		piece_bank_fill();
@@ -747,15 +747,15 @@ int main(int argc, char **argv)
 						} while (!piece_bank_stat[piece_bank_pos]);
 						memmove(&piece_sel, piece_bank + piece_bank_pos, sizeof(piece_sel));
 						break;
-					case KEY_F0 + 1:
-						print_help();
-						break;
 					case 3: /* Ctrl+C */
 						GAME_END(false);
 					case 4: /* Ctrl+D */
 						GAME_END(true);
+					case 8: /* Ctrl+H */
+						print_help();
+						break;
 					default:
-						print_msg("Invalid key (F1 for help)");
+						print_msg("Invalid key (^H for help)");
 				}
 				draw_piece_bank();
 				draw_grid_overlay(win_grid, base_grid, piece_sel.grid);
