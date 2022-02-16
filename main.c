@@ -527,6 +527,7 @@ void print_help(void)
 
 struct sopt optspec[] = {
 	SOPT_INIT_ARGL('c', "colors", "number", "Number of colors to use (0 for monochrome)"),
+	SOPT_INITL('l', "locale", "Enable locale support (may or may not be more visually pleasing)"),
 	SOPT_INITL('h', "help", "Help message"),
 	SOPT_INIT_END
 };
@@ -538,6 +539,7 @@ int main(int argc, char **argv)
 	char *optarg = NULL;
 
 	int i, j, c, score, add_points;
+	bool use_locale = false;
 
 	sopt_usage_set(optspec, argv[0], "1010!-like game for the terminal");
 
@@ -549,6 +551,9 @@ int main(int argc, char **argv)
 			case 'c':
 				color_count = strtol(optarg, NULL, 0);
 				break;
+			case 'l':
+				use_locale = true;
+				break;
 			default:
 				sopt_usage_s();
 				return 1;
@@ -557,7 +562,8 @@ int main(int argc, char **argv)
 
 	rnd_pcg_seed(&pcg, time(NULL) + getpid());
 
-	setlocale(LC_ALL, "");
+	if (use_locale)
+		setlocale(LC_ALL, "");
 
 	initscr();
 	cbreak();
