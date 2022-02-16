@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#include <fcntl.h>
 #include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -363,6 +364,33 @@ bool grid_add_valid(int dst[GRID_SIZE][GRID_SIZE], int src[GRID_SIZE][GRID_SIZE]
 	return true;
 }
 
+bool piece_move(struct piece *piece, int dx, int dy);
+bool game_valid(void)
+{
+	int i, x, y, y_dir = -1;
+	int max_y, max_x;
+	struct piece sel;
+	bool bank_valid = false;
+	for (i = 0; i < BANK_COUNT; ++i) {
+		if (!piece_bank_stat[i])
+			continue;
+		bank_valid = true;
+		memmove(&sel, piece_bank + i, sizeof(sel));
+		max_y = 1 + GRID_SIZE - sel.b;
+		max_x = 1 + GRID_SIZE - sel.r;
+		for (x = 0; x < max_x; ++x) {
+			y_dir *= -1;
+			for (y = 0; y < max_y; ++y) {
+				if (grid_add_valid(base_grid, sel.grid))
+					return true;
+				piece_move(&sel, 0, y_dir);
+			}
+			piece_move(&sel, 1, 0);
+		}
+	}
+	return !bank_valid;
+}
+
 void draw_piece(WINDOW *w, struct piece *p)
 {
 	int x, y, i, ch;
@@ -487,6 +515,59 @@ bool piece_move(struct piece *piece, int dx, int dy)
 	return true;
 }
 
+int score, high_score;
+
+int open_high_score(char *path)
+{
+	int fd;
+	if (!path) {
+		if (!getenv("HOME"))
+			return -1;
+		xasprintf(&path, "%s/.local/share/0xa0xa_score", getenv("HOME"));
+	}
+	if ((fd = open(path, O_RDWR | O_CREAT, 0755)) == -1) {
+		free(path);
+		return -1;
+	}
+	if (lockf(fd, F_LOCK, sizeof(high_score)) == -1) {
+		close(fd);
+		free(path);
+		return -1;
+	}
+	free(path);
+	return fd;
+}
+void close_high_score(int fd)
+{
+	lockf(fd, F_ULOCK, sizeof(high_score));
+	close(fd);
+}
+
+void load_high_score(void)
+{
+	int fd;
+	high_score = 0;
+	if ((fd = open_high_score(NULL)) == -1) {
+		return;
+	}
+	if (read(fd, &high_score, sizeof(high_score)) != sizeof(high_score)) {
+		high_score = 0;
+	}
+	close_high_score(fd);
+}
+
+void store_high_score(void)
+{
+	int fd;
+	if (score > high_score) {
+		high_score = score;
+		if ((fd = open_high_score(NULL)) == -1) {
+			return;
+		}
+		write(fd, &high_score, sizeof(high_score));
+		close_high_score(fd);
+	}
+}
 
 void print_msg(char *fmt,...)
 {
@@ -538,7 +619,7 @@ int main(int argc, char **argv)
 	int opt, cpos = 0, optind = 0;
 	char *optarg = NULL;
 
-	int i, j, c, score, add_points;
+	int i, j, c, add_points;
 	bool use_locale = false;
 
 	sopt_usage_set(optspec, argv[0], "1010!-like game for the terminal");
@@ -578,6 +659,7 @@ int main(int argc, char **argv)
 
 
 	score = 0;
+	load_high_score();
 	memset(base_grid, 0, sizeof(base_grid));
 	fill_grid_blanks(base_grid);
 
@@ -654,9 +736,11 @@ int main(int argc, char **argv)
 						print_help();
 						break;
 					case 4: /* Ctrl+D */
+						store_high_score();
 						endwin();
 						execvp(argv[0], argv);
 					case 3: /* Ctrl+C */
+						store_high_score();
 						endwin();
 						exit(0);
 					default:
@@ -671,7 +755,16 @@ added:
 			draw_grid(win_grid, base_grid);
 			piece_bank_stat[piece_bank_pos] = false;
 			piece_bank_pos = -1;
-			print_msg("%d pts", score);
+			if (game_valid()) {
+				print_msg("SCORE: %d pts\t HIGH SCORE: %d", score, high_score);
+			} else {
+				print_msg("GAME OVER -- %d pts %s", score, (score > high_score) ? " -- NEW HIGH SCORE" : "");
+				store_high_score();
+				getch();
+				sleep(1);
+				endwin();
+				execvp(argv[0], argv);
+			}
 		}
 	}
 
