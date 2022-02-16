@@ -708,6 +708,9 @@ int main(int argc, char **argv)
 			draw_grid_overlay(win_grid, base_grid, piece_sel.grid);
 			wrefresh(win_grid);
 			while (1) {
+				if (!game_valid()) {
+					GAME_END(true);
+				}
 				c = getch();
 				switch (c) {
 					case KEY_LEFT:
@@ -763,11 +766,7 @@ added:
 			draw_grid(win_grid, base_grid);
 			piece_bank_stat[piece_bank_pos] = false;
 			piece_bank_pos = -1;
-			if (game_valid()) {
-				print_msg("SCORE: %d pts\t HIGH SCORE: %d", score, high_score);
-			} else {
-				GAME_END(true);
-			}
+			print_msg("SCORE: %d pts\t HIGH SCORE: %d", score, high_score);
 		}
 	}
 
