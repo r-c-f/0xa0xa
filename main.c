@@ -272,6 +272,7 @@ struct piece piece_sel;
 int piece_bank_pos;
 rnd_pcg_t pcg;
 WINDOW *win_piece[BANK_COUNT];
+int color_count = -1;
 
 void piece_bank_fill(void)
 {
@@ -328,9 +329,9 @@ void draw_grid_overlay(WINDOW *w, int a[GRID_SIZE][GRID_SIZE], int b[GRID_SIZE][
 			if ((a[x][y] == PIECE_BLANK) && (b[x][y] == PIECE_BLANK)) {
 				attr[x][y] = A_INVIS;
 			} else if ((a[x][y] == PIECE_BLANK) || (b[x][y] == PIECE_BLANK)) {
-				attr[x][y] = (has_colors() ? COLOR_PAIR(a[x][y] + b[x][y] - 1) : 0 );
+				attr[x][y] = (color_count ? COLOR_PAIR(a[x][y] + b[x][y] - 1) : 0 );
 			} else {
-				attr[x][y] = (has_colors() ? COLOR_PAIR(PIECE_BLANK): 0) | A_REVERSE | A_BLINK | A_BOLD;
+				attr[x][y] = (color_count ? COLOR_PAIR(PIECE_BLANK): 0) | A_REVERSE | A_BLINK | A_BOLD;
 			}
 		}
 	}
@@ -342,7 +343,7 @@ void draw_grid(WINDOW *w, int grid[GRID_SIZE][GRID_SIZE])
 	int attr[GRID_SIZE][GRID_SIZE] = {0};
 	for (x = 0; x < GRID_SIZE; ++x) {
 		for (y = 0; y < GRID_SIZE; ++y) {
-			attr[x][y] = (has_colors() ? COLOR_PAIR(grid[x][y]) : 0);
+			attr[x][y] = (color_count ? COLOR_PAIR(grid[x][y]) : 0);
 		}
 	}
 	draw_attr_grid(w, attr);
@@ -369,7 +370,7 @@ void draw_piece(WINDOW *w, struct piece *p)
 		for (y = 0; y < 5; ++y) {
 			for (i = 1; i < 3; ++i) {
 				ch = (p->grid[x][y] == PIECE_BLANK) ? ' ' : ACS_BLOCK;
-				mvwaddch(w, y + 1, (2 * x) + i, ch | (has_colors() ? COLOR_PAIR(p->grid[x][y]) : 0));
+				mvwaddch(w, y + 1, (2 * x) + i, ch | (color_count ? COLOR_PAIR(p->grid[x][y]) : 0));
 			}
 		}
 	}
@@ -525,6 +526,7 @@ void print_help(void)
 }
 
 struct sopt optspec[] = {
+	SOPT_INIT_ARGL('c', "colors", "number", "Number of colors to use (0 for monochrome)"),
 	SOPT_INITL('h', "help", "Help message"),
 	SOPT_INIT_END
 };
@@ -544,6 +546,9 @@ int main(int argc, char **argv)
 			case 'h':
 				sopt_usage_s();
 				return 0;
+			case 'c':
+				color_count = strtol(optarg, NULL, 0);
+				break;
 			default:
 				sopt_usage_s();
 				return 1;
@@ -573,13 +578,16 @@ int main(int argc, char **argv)
 	box(win_grid, 0, 0);
 	refresh();
 
-	if (has_colors()) {
+	if (color_count) {
 		start_color();
+		if (color_count == -1) {
+			color_count = COLORS;
+		}
 		for (i = 1; i < PIECE_TYPE_COUNT; ++i) {
-			if (i <= COLORS) {
+			if (i <= color_count) {
 				init_pair(i, i - 1, COLOR_BLACK);
 			} else {
-				init_pair(i, (i % COLORS) + 1, COLOR_BLACK);
+				init_pair(i, (i % color_count) + 1, COLOR_BLACK);
 			}
 		}
 	}
@@ -627,7 +635,7 @@ int main(int argc, char **argv)
 						if ((add_points = grid_add(base_grid, piece_sel.grid))) {
 							goto added;
 						}else {
-							print_msg("%d: Cannot place", score);
+							print_msg("Cannot place");
 						}
 						break;
 					case '\t':
@@ -643,7 +651,7 @@ int main(int argc, char **argv)
 						endwin();
 						execvp(argv[0], argv);
 					default:
-						print_msg("%d: invalid key (F1 for help)", score);
+						print_msg("Invalid key (F1 for help)");
 				}
 				draw_piece_bank();
 				draw_grid_overlay(win_grid, base_grid, piece_sel.grid);
@@ -654,7 +662,7 @@ added:
 			draw_grid(win_grid, base_grid);
 			piece_bank_stat[piece_bank_pos] = false;
 			piece_bank_pos = -1;
-			print_msg("%d: added", score);
+			print_msg("%d pts", score);
 		}
 	}
 
