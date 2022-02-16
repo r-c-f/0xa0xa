@@ -338,6 +338,7 @@ void draw_grid_overlay(WINDOW *w, int a[GRID_SIZE][GRID_SIZE], int b[GRID_SIZE][
 	}
 	draw_attr_grid(w, attr);
 }
+
 void draw_grid(WINDOW *w, int grid[GRID_SIZE][GRID_SIZE])
 {
 	int x, y;
@@ -364,33 +365,6 @@ bool grid_add_valid(int dst[GRID_SIZE][GRID_SIZE], int src[GRID_SIZE][GRID_SIZE]
 	return true;
 }
 
-bool piece_move(struct piece *piece, int dx, int dy);
-bool game_valid(void)
-{
-	int i, x, y, y_dir = -1;
-	int max_y, max_x;
-	struct piece sel;
-	bool bank_valid = false;
-	for (i = 0; i < BANK_COUNT; ++i) {
-		if (!piece_bank_stat[i])
-			continue;
-		bank_valid = true;
-		memmove(&sel, piece_bank + i, sizeof(sel));
-		max_y = 1 + GRID_SIZE - sel.b;
-		max_x = 1 + GRID_SIZE - sel.r;
-		for (x = 0; x < max_x; ++x) {
-			y_dir *= -1;
-			for (y = 0; y < max_y; ++y) {
-				if (grid_add_valid(base_grid, sel.grid))
-					return true;
-				piece_move(&sel, 0, y_dir);
-			}
-			piece_move(&sel, 1, 0);
-		}
-	}
-	return !bank_valid;
-}
-
 void draw_piece(WINDOW *w, struct piece *p)
 {
 	int x, y, i, ch;
@@ -406,7 +380,6 @@ void draw_piece(WINDOW *w, struct piece *p)
 }
 
 #define unbox(w) wborder(w, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ')
-
 void draw_piece_bank(void)
 {
 	int i;
@@ -488,8 +461,6 @@ int grid_clear_lines(int grid[GRID_SIZE][GRID_SIZE])
 	return (5 * points) * ( points + 1);
 }
 
-
-
 bool piece_move(struct piece *piece, int dx, int dy)
 {
 	int x, y;
@@ -513,6 +484,32 @@ bool piece_move(struct piece *piece, int dx, int dy)
 	}
 	memmove(piece->grid, tmp, GRID_SIZE * GRID_SIZE * sizeof(piece->grid[0][0]));
 	return true;
+}
+
+bool game_valid(void)
+{
+	int i, x, y, y_dir = -1;
+	int max_y, max_x;
+	struct piece sel;
+	bool bank_valid = false;
+	for (i = 0; i < BANK_COUNT; ++i) {
+		if (!piece_bank_stat[i])
+			continue;
+		bank_valid = true;
+		memmove(&sel, piece_bank + i, sizeof(sel));
+		max_y = 1 + GRID_SIZE - sel.b;
+		max_x = 1 + GRID_SIZE - sel.r;
+		for (x = 0; x < max_x; ++x) {
+			y_dir *= -1;
+			for (y = 0; y < max_y; ++y) {
+				if (grid_add_valid(base_grid, sel.grid))
+					return true;
+				piece_move(&sel, 0, y_dir);
+			}
+			piece_move(&sel, 1, 0);
+		}
+	}
+	return !bank_valid;
 }
 
 int score, high_score;
