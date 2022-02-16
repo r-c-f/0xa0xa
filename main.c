@@ -9,6 +9,7 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <time.h>
+#include "cursutil.h"
 #include "xmem.h"
 #include "sopt.h"
 
@@ -379,7 +380,6 @@ void draw_piece(WINDOW *w, struct piece *p)
 	wrefresh(w);
 }
 
-#define unbox(w) wborder(w, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ')
 void draw_piece_bank(void)
 {
 	int i;
@@ -744,11 +744,11 @@ int main(int argc, char **argv)
 						} while (!piece_bank_stat[piece_bank_pos]);
 						memmove(&piece_sel, piece_bank + piece_bank_pos, sizeof(piece_sel));
 						break;
-					case 3: /* Ctrl+C */
+					case CTRL_('c'):
 						GAME_END(false);
-					case 4: /* Ctrl+D */
+					case CTRL_('d'):
 						GAME_END(true);
-					case 8: /* Ctrl+H */
+					case CTRL_('h'):
 						print_help();
 						break;
 					default:
