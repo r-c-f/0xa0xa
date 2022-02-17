@@ -17,6 +17,7 @@
 #include "rnd.h"
 
 enum piece_type {
+	PIECE_OVERLAP=0,
 	PIECE_BLANK=1,
 	PIECE_PLUS,
 	PIECE_BOX1,
@@ -30,6 +31,8 @@ enum piece_type {
 	PIECE_L3,
 	PIECE_TYPE_COUNT
 };
+
+int piece_ch[PIECE_TYPE_COUNT] = {0};
 
 #define GRID_SIZE 10
 
@@ -297,24 +300,14 @@ void fill_grid_blanks(int grid[GRID_SIZE][GRID_SIZE])
 }
 
 
-void draw_attr_grid(WINDOW *w, int grid[GRID_SIZE][GRID_SIZE])
+void draw_ch_grid(WINDOW *w, int grid[GRID_SIZE][GRID_SIZE])
 {
 	int x, y, i, j;
-	int ch;
 	for (x = 0; x < GRID_SIZE; ++x) {
 		for (y = 0; y < GRID_SIZE; ++y) {
-			if (grid[x][y] & A_INVIS) {
-				ch = ' ';
-			}else {
-				if (grid[x][y] & A_BLINK) {
-					ch = 'X';
-				} else {
-					ch = ACS_BLOCK;
-				}
-			}
 			for (i = 1; i < 4; ++i) {
 				for (j = 1; j < 3; ++j) {
-					mvwaddch(w, (y * 2) + j, (x * 3) + i, ch | grid[x][y]);
+					mvwaddch(w, (y * 2) + j, (x * 3) + i, grid[x][y]);
 				}
 			}
 		}
@@ -324,32 +317,33 @@ void draw_attr_grid(WINDOW *w, int grid[GRID_SIZE][GRID_SIZE])
 void draw_grid_overlay(WINDOW *w, int a[GRID_SIZE][GRID_SIZE], int b[GRID_SIZE][GRID_SIZE])
 {
 	int x, y;
-	int attr[GRID_SIZE][GRID_SIZE] = {0};
+	int ch[GRID_SIZE][GRID_SIZE] = {0};
 
 	for (x = 0; x < GRID_SIZE; ++x) {
 		for (y = 0; y < GRID_SIZE; ++y) {
 			if ((a[x][y] == PIECE_BLANK) && (b[x][y] == PIECE_BLANK)) {
-				attr[x][y] = A_INVIS;
+				ch[x][y] = piece_ch[PIECE_BLANK];
 			} else if ((a[x][y] == PIECE_BLANK) || (b[x][y] == PIECE_BLANK)) {
-				attr[x][y] = (color_count ? COLOR_PAIR(a[x][y] + b[x][y] - 1) : 0 );
+				ch[x][y] = piece_ch[a[x][y] + b[x][y] - 1];
 			} else {
-				attr[x][y] = (color_count ? COLOR_PAIR(PIECE_BLANK): 0) | A_REVERSE | A_BLINK | A_BOLD;
+				ch[x][y] = piece_ch[PIECE_OVERLAP];
+
 			}
 		}
 	}
-	draw_attr_grid(w, attr);
+	draw_ch_grid(w, ch);
 }
 
 void draw_grid(WINDOW *w, int grid[GRID_SIZE][GRID_SIZE])
 {
 	int x, y;
-	int attr[GRID_SIZE][GRID_SIZE] = {0};
+	int ch[GRID_SIZE][GRID_SIZE] = {0};
 	for (x = 0; x < GRID_SIZE; ++x) {
 		for (y = 0; y < GRID_SIZE; ++y) {
-			attr[x][y] = (color_count ? COLOR_PAIR(grid[x][y]) : 0);
+			ch[x][y] = piece_ch[grid[x][y]];
 		}
 	}
-	draw_attr_grid(w, attr);
+	draw_ch_grid(w, ch);
 }
 
 bool grid_add_valid(int dst[GRID_SIZE][GRID_SIZE], int src[GRID_SIZE][GRID_SIZE])
@@ -372,8 +366,7 @@ void draw_piece(WINDOW *w, struct piece *p)
 	for (x = 0; x < 5; ++x) {
 		for (y = 0; y < 5; ++y) {
 			for (i = 1; i < 3; ++i) {
-				ch = (p->grid[x][y] == PIECE_BLANK) ? ' ' : ACS_BLOCK;
-				mvwaddch(w, y + 1, (2 * x) + i, ch | (color_count ? COLOR_PAIR(p->grid[x][y]) : 0));
+				mvwaddch(w, y + 1, (2 * x) + i, ' ' | piece_ch[p->grid[x][y]]);
 			}
 		}
 	}
@@ -605,7 +598,6 @@ void print_help(void)
 
 struct sopt optspec[] = {
 	SOPT_INIT_ARGL('c', "colors", "number", "Number of colors to use (0 for monochrome)"),
-	SOPT_INITL('l', "locale", "Enable locale support (may or may not be more visually pleasing)"),
 	SOPT_INITL('h', "help", "Help message"),
 	SOPT_INIT_END
 };
@@ -629,7 +621,6 @@ int main(int argc, char **argv)
 	char *optarg = NULL;
 
 	int i, j, c, add_points;
-	bool use_locale = false;
 
 	sopt_usage_set(optspec, argv[0], "1010!-like game for the terminal");
 
@@ -641,9 +632,6 @@ int main(int argc, char **argv)
 			case 'c':
 				color_count = strtol(optarg, NULL, 0);
 				break;
-			case 'l':
-				use_locale = true;
-				break;
 			default:
 				sopt_usage_s();
 				return 1;
@@ -652,8 +640,7 @@ int main(int argc, char **argv)
 
 	rnd_pcg_seed(&pcg, time(NULL) + getpid());
 
-	if (use_locale)
-		setlocale(LC_ALL, "");
+	setlocale(LC_ALL, "");
 
 	initscr();
 	raw();
@@ -675,6 +662,11 @@ int main(int argc, char **argv)
 	box(win_grid, 0, 0);
 	refresh();
 
+	piece_ch[PIECE_OVERLAP] = 'X';
+	for(i = 1; i < PIECE_TYPE_COUNT; ++i) {
+		piece_ch[i] = ' ';
+	}
+
 	if (color_count) {
 		start_color();
 		if (color_count == -1) {
@@ -682,10 +674,15 @@ int main(int argc, char **argv)
 		}
 		for (i = 1; i < PIECE_TYPE_COUNT; ++i) {
 			if (i <= color_count) {
-				init_pair(i, i - 1, COLOR_BLACK);
+				init_pair(i, COLOR_BLACK, i - 1);
 			} else {
-				init_pair(i, (i % color_count) + 1, COLOR_BLACK);
+				init_pair(i, COLOR_BLACK, (i % color_count) + 1);
 			}
+			piece_ch[i] |= COLOR_PAIR(i);
+		}
+	} else {
+		for (i = PIECE_BLANK + 1; i < PIECE_TYPE_COUNT; ++i) {
+			piece_ch[i] |= A_REVERSE;
 		}
 	}
 	for (i = 1; i < PIECE_BASE_LEN; ++i) {
