@@ -691,7 +691,7 @@ int main(int argc, char **argv)
 	for (i = 1; i < PIECE_BASE_LEN; ++i) {
 		fill_grid_blanks(piece_base[i].grid);
 	}
-	print_msg("^H for help");
+	print_help();
 	refresh();
 	while (1) {
 		piece_bank_fill();
@@ -748,11 +748,9 @@ int main(int argc, char **argv)
 						GAME_END(false);
 					case CTRL_('d'):
 						GAME_END(true);
-					case CTRL_('h'):
-						print_help();
-						break;
 					default:
-						print_msg("Invalid key (^H for help)");
+						beep();
+						print_help();
 				}
 				draw_piece_bank();
 				draw_grid_overlay(win_grid, base_grid, piece_sel.grid);
