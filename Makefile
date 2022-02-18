@@ -1,4 +1,4 @@
-SRC = main.c xmem.h sopt.h
+SRC = main.c xmem.h sopt.h rnd.h
 
 all: 0xa0xa
 

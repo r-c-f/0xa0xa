@@ -13,6 +13,8 @@
 #include "xmem.h"
 #include "sopt.h"
 
+#define RND_IMPLEMENTATION
+#include "rnd.h"
 
 enum piece_type {
 	PIECE_OVERLAP=0,
@@ -273,17 +275,15 @@ struct piece piece_bank[BANK_COUNT];
 bool piece_bank_stat[BANK_COUNT];
 struct piece piece_sel;
 int piece_bank_pos;
+rnd_pcg_t pcg;
 WINDOW *win_piece[BANK_COUNT];
 int color_count = -1;
-
 
 void piece_bank_fill(void)
 {
 	int i;
-	struct piece *r;
 	for (i = 0; i < BANK_COUNT; ++i) {
-		r = piece_base+ 2 + (random() % (PIECE_BASE_LEN - 2));
-		memmove(piece_bank + i, r, sizeof(*piece_bank));
+		memmove(piece_bank + i, piece_base + rnd_pcg_range(&pcg, 2, PIECE_BASE_LEN - 1), sizeof(*piece_bank));
 		piece_bank_stat[i] = true;
 	}
 }
@@ -638,7 +638,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	srandom(time(NULL) + getpid());
+	rnd_pcg_seed(&pcg, time(NULL) + getpid());
 
 	setlocale(LC_ALL, "");
 
