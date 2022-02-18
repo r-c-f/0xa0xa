@@ -646,6 +646,7 @@ int main(int argc, char **argv)
 	raw();
 	noecho();
 	keypad(stdscr, true);
+	curs_set(0);
 
 	WINDOW *win_grid = newwin((2 * GRID_SIZE) + 2, (3 * GRID_SIZE) + 2, 1,1);
 
