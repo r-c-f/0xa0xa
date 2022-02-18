@@ -559,40 +559,19 @@ void store_high_score(void)
 	}
 }
 
-void print_msg(char *fmt,...)
-{
-	va_list ap;
-	move(getmaxy(stdscr) - 1, 0);
-	clrtoeol();
-	move(getmaxy(stdscr) - 1, 0);
-	va_start(ap, fmt);
-	vw_printw(stdscr, fmt, ap);
-	va_end(ap);
-	refresh();
-}
-
 #define PRINT_HELP_BOLD_DESC(bold, desc) do { \
-	attron(A_BOLD); \
-	addstr(bold); \
-	attroff(A_BOLD); \
-	printw(": %s; ", desc); \
+	cu_stat_aprintw(A_BOLD, "%s", bold); \
+	cu_stat_aprintw(A_NORMAL, ": %s, ", desc); \
 } while (0)
 
 void print_help(void)
 {
-	attr_t oldattr;
-	short oldpair;
-	attr_get(&oldattr, &oldpair, NULL);
-	print_msg("");
-	move(getmaxy(stdscr) - 1, 0);
-
+	cu_stat_clear();
 	PRINT_HELP_BOLD_DESC("Arrows/hjkl/wasd", "Move");
 	PRINT_HELP_BOLD_DESC("Tab", "Select");
 	PRINT_HELP_BOLD_DESC("Enter/Space", "Place");
 	PRINT_HELP_BOLD_DESC("^C", "Quit");
 	PRINT_HELP_BOLD_DESC("^D", "New");
-
-	attr_set(oldattr, oldpair, NULL);
 	refresh();
 }
 
@@ -603,7 +582,8 @@ struct sopt optspec[] = {
 };
 
 #define GAME_END(restart) do { \
-	print_msg("GAME OVER (press any key) -- %d pts %s", score, (score > high_score) ? " -- NEW HIGH SCORE" : ""); \
+	cu_stat_setw("GAME OVER (press any key) -- %d pts %s", score, (score > high_score) ? " -- NEW HIGH SCORE" : ""); \
+	refresh(); \
 	store_high_score(); \
 	getch(); \
 	sleep(1); \
@@ -642,6 +622,7 @@ int main(int argc, char **argv)
 
 	setlocale(LC_ALL, "");
 
+	cu_stat_init(CU_STAT_BOTTOM);
 	initscr();
 	raw();
 	noecho();
@@ -733,7 +714,7 @@ int main(int argc, char **argv)
 						if ((add_points = grid_add(base_grid, piece_sel.grid))) {
 							goto added;
 						}else {
-							print_msg("Cannot place");
+							cu_stat_setw("Cannot place");
 						}
 						break;
 					case '\t':
@@ -759,7 +740,7 @@ added:
 			draw_grid(win_grid, base_grid);
 			piece_bank_stat[piece_bank_pos] = false;
 			piece_bank_pos = -1;
-			print_msg("SCORE: %d pts\t HIGH SCORE: %d", score, high_score);
+			cu_stat_setw("SCORE: %d pts\t HIGH SCORE: %d", score, high_score);
 		}
 	}
 
