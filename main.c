@@ -719,7 +719,7 @@ int main(int argc, char **argv)
 					case 's':
 						piece_move(&piece_sel, 0, 1);
 						break;
-					case '\n':
+					CASE_ALL_RETURN:
 					case ' ':
 						if ((add_points = grid_add(base_grid, piece_sel.grid))) {
 							goto added;
