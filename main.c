@@ -673,9 +673,10 @@ int main(int argc, char **argv)
 		}
 	} else {
 		for (i = PIECE_BLANK + 1; i < PIECE_TYPE_COUNT; ++i) {
-			piece_ch[i] = '*';
+			piece_ch[i] = ACS_BLOCK;
 		}
 	}
+
 	for (i = 1; i < PIECE_BASE_LEN; ++i) {
 		fill_grid_blanks(piece_base[i].grid);
 	}
