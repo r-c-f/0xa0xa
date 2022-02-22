@@ -648,7 +648,12 @@ int main(int argc, char **argv)
 	for(i = 1; i < PIECE_TYPE_COUNT; ++i) {
 		piece_ch[i] = ' ';
 	}
-
+	/* detect monochrome if color count unspecified */
+	if (color_count == -1) {
+		if (!has_colors()) {
+			color_count = 0;
+		}
+	}
 	if (color_count) {
 		start_color();
 		if (color_count == -1) {
@@ -662,9 +667,13 @@ int main(int argc, char **argv)
 			}
 			piece_ch[i] |= COLOR_PAIR(i);
 		}
-	} else {
+	} else if (termattrs() & A_REVERSE) {
 		for (i = PIECE_BLANK + 1; i < PIECE_TYPE_COUNT; ++i) {
 			piece_ch[i] |= A_REVERSE;
+		}
+	} else {
+		for (i = PIECE_BLANK + 1; i < PIECE_TYPE_COUNT; ++i) {
+			piece_ch[i] = '*';
 		}
 	}
 	for (i = 1; i < PIECE_BASE_LEN; ++i) {
