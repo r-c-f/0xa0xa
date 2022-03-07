@@ -576,7 +576,7 @@ void print_help(void)
 }
 
 struct sopt optspec[] = {
-	SOPT_INIT_ARGL('c', "colors", "number", "Number of colors to use (0 for monochrome)"),
+	SOPT_INIT_ARGL('c', "colors", SOPT_ARGTYPE_INT, "number", "Number of colors to use (0 for monochrome)"),
 	SOPT_INITL('h', "help", "Help message"),
 	SOPT_INIT_END
 };
@@ -598,19 +598,19 @@ int main(int argc, char **argv)
 {
 	/* sopt things*/
 	int opt;
-	char *optarg = NULL;
+	union sopt_arg soptarg;
 
 	int i, j, c, add_points;
 
 	sopt_usage_set(optspec, argv[0], "1010!-like game for the terminal");
 
-	while ((opt = sopt_getopt_s(argc, argv, optspec, NULL, NULL, &optarg)) != -1) {
+	while ((opt = sopt_getopt_s(argc, argv, optspec, NULL, NULL, &soptarg)) != -1) {
 		switch (opt) {
 			case 'h':
 				sopt_usage_s();
 				return 0;
 			case 'c':
-				color_count = strtol(optarg, NULL, 0);
+				color_count = soptarg.i;
 				break;
 			default:
 				sopt_usage_s();
