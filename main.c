@@ -362,7 +362,7 @@ bool grid_add_valid(int dst[GRID_SIZE][GRID_SIZE], int src[GRID_SIZE][GRID_SIZE]
 
 void draw_piece(WINDOW *w, struct piece *p)
 {
-	int x, y, i, ch;
+	int x, y, ch;
 	for (x = 0; x < 5; ++x) {
 		for (y = 0; y < 5; ++y) {
 			for (i = 1; i < 3; ++i) {
@@ -600,7 +600,7 @@ int main(int argc, char **argv)
 	int opt;
 	union sopt_arg soptarg;
 
-	int i, j, c, add_points;
+	int i, c, add_points;
 
 	sopt_usage_set(optspec, argv[0], "1010!-like game for the terminal");
 
