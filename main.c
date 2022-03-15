@@ -362,7 +362,7 @@ bool grid_add_valid(int dst[GRID_SIZE][GRID_SIZE], int src[GRID_SIZE][GRID_SIZE]
 
 void draw_piece(WINDOW *w, struct piece *p)
 {
-	int x, y, ch;
+	int x, y, i;
 	for (x = 0; x < 5; ++x) {
 		for (y = 0; y < 5; ++y) {
 			for (i = 1; i < 3; ++i) {
